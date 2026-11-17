@@ -251,7 +251,7 @@ def main():
         "THIS IS RIDICULOUS!! I ordered ORD00015 TWO WEEKS AGO and it still hasnt arrived! I WANT A FULL REFUND NOW!!",
         "What is your return policy for electronics?",
         "I want to talk to a real person please.",
-        "Can I update my email address on my account? It is sanjana@example.com."
+        "Can I update my email address on my account? It is gaurang@example.com."
     ]
     
     console.print("[bold cyan]Running default test suite scenarios...[/bold cyan]\n")

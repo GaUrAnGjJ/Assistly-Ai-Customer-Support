@@ -1,0 +1,42 @@
+# Core AI/Agent framework
+langgraph==0.2.28
+langchain==0.3.7
+langchain-community==0.3.7
+
+# LLM providers
+openai==1.54.3
+
+# Vector database for knowledge base
+chromadb==0.5.18
+
+# Data handling
+datasets==3.1.0
+pandas==2.2.3
+sqlalchemy>=1.4,<2.0.36
+
+# API layer
+fastapi==0.115.4
+uvicorn==0.32.0
+pydantic==2.9.2
+
+# UI
+streamlit==1.40.0
+
+# Evaluation
+ragas==0.2.6
+
+# Utilities
+python-dotenv==1.0.1
+rich==13.9.4
+loguru==0.7.2
+
+# LLM Providers & Groq support
+langchain-groq==0.2.1
+
+# Local fine-tuning & local PEFT model support
+transformers==4.46.2
+peft==0.13.2
+trl==0.12.1
+bitsandbytes>=0.42.0
+accelerate==1.1.1
+torch>=2.2.0
