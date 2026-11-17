@@ -24,33 +24,58 @@ def _is_writable_path(path: str) -> bool:
 # langchain-groq) pick up the right values without needing per-call lookups.
 try:
     import streamlit as st
-    # Only access st.secrets if on Streamlit Cloud or if a secrets.toml file exists,
-    # as querying st.secrets on recent Streamlit versions crashes with a 'No secrets found' screen.
-    _has_secrets = (
-        os.path.exists("/mount/src")  # Streamlit Cloud
-        or os.path.exists(os.path.expanduser("~/.streamlit/secrets.toml"))
-        or os.path.exists(os.path.join(os.getcwd(), ".streamlit", "secrets.toml"))
-        or os.path.exists(os.path.join(base_dir, ".streamlit", "secrets.toml"))
-        or os.path.exists(os.path.join(base_dir, "..", ".streamlit", "secrets.toml"))
-    )
-    if _has_secrets:
-        for _key in ["GROQ_API_KEY", "DATABASE_URL", "CHROMA_PATH", "USE_PROD"]:
-            if _key in st.secrets and not os.getenv(_key):
-                os.environ[_key] = str(st.secrets[_key])
+    try:
+        if hasattr(st, "secrets"):
+            for _key in ["GROQ_API_KEY", "DATABASE_URL", "CHROMA_PATH", "USE_PROD", "GROQ_MODEL"]:
+                if _key in st.secrets and not os.getenv(_key):
+                    os.environ[_key] = str(st.secrets[_key]).strip()
+    except Exception:
+        pass
 except Exception:
     pass  # Running locally or st.secrets not available — .env values are used
 
-class Config:
-    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+class _ConfigMeta(type):
+    @property
+    def GROQ_API_KEY(cls):
+        key = os.getenv("GROQ_API_KEY")
+        if not key:
+            try:
+                import streamlit as st
+                if hasattr(st, "secrets") and "GROQ_API_KEY" in st.secrets:
+                    key = str(st.secrets["GROQ_API_KEY"]).strip()
+                    os.environ["GROQ_API_KEY"] = key
+            except Exception:
+                pass
+        return key
 
-    # Use the same fast model for all agents — 70b was causing 57s delays
-    DEV_MODEL  = "llama-3.1-8b-instant"
-    PROD_MODEL = "llama-3.1-8b-instant"
+    @GROQ_API_KEY.setter
+    def GROQ_API_KEY(cls, val):
+        if val:
+            os.environ["GROQ_API_KEY"] = str(val).strip()
+        elif "GROQ_API_KEY" in os.environ:
+            del os.environ["GROQ_API_KEY"]
+
+class Config(metaclass=_ConfigMeta):
+
+    # Supported fast model for Groq (e.g. openai/gpt-oss-20b or qwen/qwen3.8-27b)
+    DEV_MODEL  = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
+    PROD_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 
     USE_PROD_MODEL = os.getenv("USE_PROD", "false").lower() == "true"
 
     @classmethod
     def get_model(cls) -> str:
+        model = os.getenv("GROQ_MODEL")
+        if not model:
+            try:
+                import streamlit as st
+                if hasattr(st, "secrets") and "GROQ_MODEL" in st.secrets:
+                    model = str(st.secrets["GROQ_MODEL"]).strip()
+                    os.environ["GROQ_MODEL"] = model
+            except Exception:
+                pass
+        if model:
+            return model
         return cls.PROD_MODEL if cls.USE_PROD_MODEL else cls.DEV_MODEL
 
     _db_path = os.path.join(base_dir, "data", "support.db")

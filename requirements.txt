@@ -1,5 +1,5 @@
 # Core AI/Agent framework
-langgraph>=1.2.0
+langgraph>=0.2.28
 langchain>=0.3.7
 langchain-community>=0.3.7
 

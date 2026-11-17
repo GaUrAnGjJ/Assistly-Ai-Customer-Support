@@ -561,6 +561,9 @@ st.markdown("""
 if not db_status["success"]:
     st.error(f"⚠️ Database Setup Error:\n\n{db_status['error']}")
 
+if not Config.GROQ_API_KEY:
+    st.error("🔑 **GROQ API Key Missing**: To enable AI responses, add `GROQ_API_KEY = \"gsk_...\"` in **Streamlit Cloud → App Settings → Secrets**.")
+
 # ── SIDEBAR ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown("## ⚙️ Model Engine")
@@ -580,8 +583,12 @@ with st.sidebar:
         else:
             st.warning("⚠️ No weights found. Run `scripts/finetune.py` first.\n\nFalling back to Cloud API.")
     else:
-        st.success("🟢 Cloud · Groq Llama-3.1 (fast mode)")
-        st.caption("Enable toggle only after running `scripts/finetune.py`")
+        if Config.GROQ_API_KEY:
+            st.success(f"🟢 Cloud · Groq ({Config.get_model()})")
+            st.caption("Cloud API inference active")
+        else:
+            st.error("❌ Groq API Key Missing")
+            st.caption("Add GROQ_API_KEY in App Settings → Secrets")
 
     st.markdown("---")
     st.markdown("## 🏗️ Active Agents")
@@ -1003,15 +1010,28 @@ if st.session_state.get("pending_user_input"):
     prompt = st.session_state["pending_user_input"]
     st.session_state["pending_user_input"] = None   # consume immediately
 
-    with st.spinner("Agents working…"):
-        result = process_ticket(
-            user_message=prompt,
-            conversation_history=st.session_state.history,
-            pending_action=st.session_state.pending_action,
-            pending_order_id=st.session_state.pending_order_id,
-            pending_action_reason=st.session_state.get("pending_action_reason"),
-            active_order_id=st.session_state.active_order_id,
-        )
+    if not Config.GROQ_API_KEY:
+        result = {
+            "final_response": "⚠️ **Groq API Key Missing**: The system cannot process tickets because `GROQ_API_KEY` is not configured. Please add your key in **Streamlit Cloud → App Settings → Secrets** (`GROQ_API_KEY = \"gsk_...\"`).",
+            "intent": "system_notice",
+            "sentiment": "neutral",
+            "quality_score": 0.0,
+            "needs_escalation": False,
+            "processing_time_ms": 0.0,
+            "order_details": None,
+            "audit_logs": [],
+            "ticket_id": "SYS_KEY_ERR",
+        }
+    else:
+        with st.spinner("Agents working…"):
+            result = process_ticket(
+                user_message=prompt,
+                conversation_history=st.session_state.history,
+                pending_action=st.session_state.pending_action,
+                pending_order_id=st.session_state.pending_order_id,
+                pending_action_reason=st.session_state.get("pending_action_reason"),
+                active_order_id=st.session_state.active_order_id,
+            )
 
     extracted_order_id = result.get("classification", {}).get("order_id")
     if extracted_order_id:

@@ -1,6 +1,10 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
+import sys, os
+
+# Ensure multi-agent-support root is in sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 from config import Config
 
 st.title("🗄️ Live Database Viewer")
