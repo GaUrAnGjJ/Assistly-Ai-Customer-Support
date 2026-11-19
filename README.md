@@ -275,7 +275,7 @@ Assistly-AI-Customer-Support-System/
 
 The application is deployed live on Streamlit Community Cloud. You can try out standard refund flows, VIP bypass scenarios, and policy questions in real-time.
 
-### [🚀 Try Assistly Live →](https://assistly-app.streamlit.app/)
+### [🚀 Try Assistly Live →](https://assistly-ai-customer-support.streamlit.app/)
 
 ---
 
